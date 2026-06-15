@@ -3,44 +3,98 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
+  CartesianGrid,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   Legend
 } from 'recharts';
 
 export function HistoryChart({ data }) {
+  console.log("History Data:", data);
+
   return (
-    <div className="rounded-2xl bg-slate-900 border border-white/5 shadow-xl p-6">
-      <h3 className="text-slate-300 font-medium tracking-wide uppercase text-sm mb-6">Environment History (Last 2 Hours)</h3>
-      <div className="h-87.5 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
-              </linearGradient>
-              <linearGradient id="colorHum" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} vertical={false} />
-            <XAxis dataKey="time" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-            <YAxis yAxisId="left" stroke="#64748b" fontSize={12} domain={['dataMin - 1', 'dataMax + 1']} tickLine={false} axisLine={false} />
-            <YAxis yAxisId="right" orientation="right" stroke="#64748b" fontSize={12} domain={[30, 80]} tickLine={false} axisLine={false} />
-            <Tooltip 
-              contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '0.75rem', color: '#f8fafc' }}
-              itemStyle={{ fontWeight: '500' }}
-            />
-            <Legend wrapperStyle={{ paddingTop: '20px' }} />
-            <Area yAxisId="left" type="monotone" dataKey="temperature" name="Temperature (°C)" stroke="#f43f5e" strokeWidth={3} fillOpacity={1} fill="url(#colorTemp)" isAnimationActive={false} />
-            <Area yAxisId="right" type="monotone" dataKey="humidity" name="Humidity (%)" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorHum)" isAnimationActive={false} />
-          </AreaChart>
-        </ResponsiveContainer>
+    <div
+      className="
+        rounded-3xl
+        border border-cyan-500/10
+        bg-gradient-to-br from-[#081221] to-[#030b18]
+        p-4
+        shadow-xl shadow-cyan-500/5
+        w-full
+        h-full
+      "
+    >
+      <div className="mb-4">
+        <h2 className="text-lg font-bold text-white">
+          Environmental Analytics
+        </h2>
+
+        <p className="text-slate-400 text-xs mt-1">
+          Trend visualization
+        </p>
       </div>
+
+      <ResponsiveContainer width="100%" height={460}>
+        <AreaChart data={data}>
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.45} />
+              <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.02} />
+            </linearGradient>
+
+            <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#2563eb" stopOpacity={0.30} />
+              <stop offset="95%" stopColor="#2563eb" stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+
+          <CartesianGrid
+            stroke="#1e293b"
+            strokeDasharray="3 3"
+          />
+
+          <XAxis
+            dataKey="time"
+            stroke="#94a3b8"
+            tick={{ fill: '#94a3b8', fontSize: 10 }}
+          />
+
+          <YAxis
+            stroke="#94a3b8"
+            tick={{ fill: '#94a3b8', fontSize: 10 }}
+          />
+
+          <Tooltip
+            formatter={(value, name) => [
+              value,
+              name === 'temperature'
+                ? 'Temperature (°C)'
+                : 'Humidity (%)'
+            ]}
+          />
+
+          <Legend />
+
+          <Area
+            type="monotone"
+            dataKey="temperature"
+            name="Temperature (°C)"
+            stroke="#38bdf8"
+            fill="url(#g1)"
+            strokeWidth={2.5}
+          />
+
+          <Area
+            type="monotone"
+            dataKey="humidity"
+            name="Humidity (%)"
+            stroke="#2563eb"
+            fill="url(#g2)"
+            strokeWidth={2}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useIncubatorData } from './hooks/useIncubatorData';
 import { DashboardLayout } from './components/DashboardLayout';
 import { ProgressTracker } from './components/ProgressTracker';
@@ -6,50 +6,70 @@ import { MetricCard } from './components/MetricCard';
 import { StatusCard } from './components/StatusCard';
 import { ActuatorStatus } from './components/ActuatorStatus';
 import { HistoryChart } from './components/HistoryChart';
+import { DataLogTable } from './components/DataLogTable';
 
 function App() {
-  const { data, startNewIncubation, stopIncubation } = useIncubatorData();
+  const { data } = useIncubatorData();
+  const [activePage, setActivePage] = useState('overview');
 
   return (
-    <DashboardLayout isOffline={data.isDeviceOffline}>
-      <div className="space-y-6">
-        <ProgressTracker 
-          data={data} 
-          onStart={startNewIncubation} 
-          onStop={stopIncubation} 
-        />
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <MetricCard
-            title="Avg Temperature"
-            value={data.temperature}
-            unit="°C"
-            type="temperature"
-          />
-          <MetricCard
-            title="Avg Humidity"
-            value={data.humidity}
-            unit="%"
-            type="humidity"
-          />
-          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <DashboardLayout
+      isOffline={data.isDeviceOffline}
+      activePage={activePage}
+      setActivePage={setActivePage}
+    >
+      {activePage === 'overview' && (
+        <div className="space-y-5">
+          {/* TOP HERO */}
+          <ProgressTracker data={data} />
+
+          {/* TOP WIDGETS */}
+          <div className="grid grid-cols-4 gap-5">
+            <MetricCard
+              title="Temperature"
+              value={data.temperature}
+              unit="°C"
+              type="temperature"
+            />
+
+            <MetricCard
+              title="Humidity"
+              value={data.humidity}
+              unit="%"
+              type="humidity"
+            />
+
             <StatusCard
-              title="Tank Water Level"
+              title="Water Tank"
               value={data.waterLevel}
               type="water"
             />
+
             <StatusCard
               title="Last Egg Turn"
               value={data.lastTurnTimestamp}
               type="tray"
             />
           </div>
+
+          {/* BOTTOM SECTION */}
+          <div className="grid grid-cols-12 gap-5 mt-2 items-stretch">
+            {/* LEFT ACTUATORS */}
+            <div className="col-span-4">
+              <ActuatorStatus actuators={data.actuators} />
+            </div>
+
+            {/* RIGHT ANALYTICS */}
+            <div className="col-span-8">
+              <HistoryChart data={data.history} />
+            </div>
+          </div>
         </div>
+      )}
 
-        <ActuatorStatus actuators={data.actuators} />
-
-        <HistoryChart data={data.history} />
-      </div>
+      {activePage === 'logs' && (
+        <DataLogTable logs={data.logs} />
+      )}
     </DashboardLayout>
   );
 }

@@ -1,38 +1,161 @@
 import React from 'react';
-import { cn } from '../lib/utils';
-import { Flame, Fan, Zap } from 'lucide-react';
+import {
+  Flame,
+  Fan,
+  Droplets,
+  RefreshCw
+} from 'lucide-react';
 
 export function ActuatorStatus({ actuators }) {
-  const items = [
-    { key: 'heater', label: 'Heater Component', icon: Flame, status: actuators.heater },
-    { key: 'fan', label: 'Circulation Fan', icon: Fan, status: actuators.fan },
-    { key: 'pump', label: 'Water Pump', icon: Zap, status: actuators.pump },
+  const cards = [
+    {
+      title: 'Heater',
+      active: actuators?.heater,
+      icon: Flame,
+      graph: 'wave',
+      iconBg: 'bg-orange-500/10',
+      iconColor: 'text-orange-400'
+    },
+    {
+      title: 'Circulation Fan',
+      active: actuators?.fan,
+      icon: Fan,
+      graph: 'lines',
+      iconBg: 'bg-cyan-500/10',
+      iconColor: 'text-cyan-300'
+    },
+    {
+      title: 'Water Pump',
+      active: actuators?.pompa,
+      icon: Droplets,
+      graph: 'dots',
+      iconBg: 'bg-cyan-500/10',
+      iconColor: 'text-cyan-300'
+    },
+    {
+      title: 'Servo Motor',
+      active: actuators?.servo,
+      icon: RefreshCw,
+      graph: 'arc',
+      iconBg: 'bg-sky-500/10',
+      iconColor: 'text-cyan-300'
+    }
   ];
 
+  const renderGraph = (type) => {
+    if (type === 'wave') {
+      return (
+        <svg viewBox="0 0 100 18" className="w-full h-5">
+          <path
+            d="M0 9 Q12 2 25 9 T50 9 T75 9 T100 7"
+            fill="none"
+            stroke="#fb923c"
+            strokeWidth="2"
+          />
+        </svg>
+      );
+    }
+
+    if (type === 'lines') {
+      return (
+        <svg viewBox="0 0 100 18" className="w-full h-5">
+          <path d="M0 4 Q25 0 50 4 T100 4" fill="none" stroke="#22d3ee" strokeWidth="1.4" />
+          <path d="M0 9 Q25 5 50 9 T100 9" fill="none" stroke="#22d3ee" strokeWidth="1.1" opacity="0.7" />
+          <path d="M0 14 Q25 10 50 14 T100 14" fill="none" stroke="#22d3ee" strokeWidth="1" opacity="0.5" />
+        </svg>
+      );
+    }
+
+    if (type === 'dots') {
+      return (
+        <div className="flex gap-1 justify-center mt-2">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div
+              key={i}
+              className="w-1.5 h-1.5 rounded-full bg-cyan-400"
+              style={{
+                marginTop: Math.sin(i * 0.8) * 3
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    if (type === 'arc') {
+      return (
+        <svg viewBox="0 0 100 20" className="w-full h-5">
+          <path
+            d="M10 16 Q50 -2 90 16"
+            fill="none"
+            stroke="#1d9bf0"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+    }
+  };
+
   return (
-    <div className="rounded-2xl bg-slate-900 border border-white/5 shadow-xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-white/5 bg-slate-900/50">
-        <h3 className="text-slate-300 font-medium tracking-wide uppercase text-sm">Live Actuator Status</h3>
-      </div>
-      <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {items.map(({ key, label, icon: Icon, status }) => {
-          const isActive = status;
+    <div
+      className="
+        rounded-3xl
+        border border-cyan-500/10
+        bg-gradient-to-br from-[#0b1730] to-[#081221]
+        p-4
+        shadow-2xl shadow-cyan-500/5
+        h-full
+        w-full
+      "
+    >
+      <div className="grid grid-cols-2 gap-3 h-full">
+        {cards.map((item, idx) => {
+          const Icon = item.icon;
+
           return (
-            <div key={key} className="flex items-center gap-4 bg-slate-950/50 p-4 rounded-xl border border-white/5">
-              <div className={cn(
-                "p-3 rounded-xl transition-colors duration-500",
-                isActive ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]" : "bg-slate-800 text-slate-500 border border-slate-700"
-              )}>
-                <Icon className={cn("w-5 h-5", isActive && "animate-pulse")} />
+            <div
+              key={idx}
+              className="
+                rounded-2xl
+                border border-cyan-500/10
+                bg-gradient-to-br from-[#081221] to-[#030b18]
+                p-4
+                flex flex-col justify-between
+                min-h-[220px]
+              "
+            >
+              <div>
+                <div className="flex justify-between items-start mb-3">
+                  <div className={`p-3 rounded-2xl ${item.iconBg}`}>
+                    <Icon className={`w-5 h-5 ${item.iconColor}`} />
+                  </div>
+
+                  <span
+                    className={`
+                      px-2 py-1 rounded-full text-[10px] font-bold
+                      ${
+                        item.active
+                          ? 'bg-cyan-500/15 text-cyan-300'
+                          : 'bg-slate-700 text-slate-300'
+                      }
+                    `}
+                  >
+                    {item.active ? 'ACTIVE' : 'STANDBY'}
+                  </span>
+                </div>
+
+                <h3 className="text-white text-base font-medium">
+                  {item.title}
+                </h3>
+
+                <p className="text-white text-3xl font-bold mt-3">
+                  {item.active ? 'ON' : 'IDLE'}
+                </p>
               </div>
-              <div className="flex flex-col">
-                <span className="text-slate-400 text-sm font-medium">{label}</span>
-                <span className={cn(
-                  "text-sm font-bold mt-0.5 tracking-wider uppercase transition-colors duration-300",
-                  isActive ? "text-emerald-400" : "text-slate-600"
-                )}>
-                  {isActive ? 'Active Mode' : 'Standby'}
-                </span>
+
+              <div>
+                {renderGraph(item.graph)}
               </div>
             </div>
           );

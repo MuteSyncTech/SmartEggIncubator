@@ -1,54 +1,82 @@
 import React from 'react';
-import { Container, RotateCw, AlertCircle } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { formatDistanceToNow } from 'date-fns';
+import {
+  Droplets,
+  Egg
+} from 'lucide-react';
 
 export function StatusCard({ title, value, type }) {
-  let icon = null;
-  let colorClass = "text-slate-200";
-  let displayValue = value;
-
-  if (type === 'water') {
-    icon = <Container className="w-5 h-5 text-slate-400" />;
-    if (value === true) {
-      displayValue = "Safe / Terisi";
-      colorClass = "text-emerald-400";
-    } else {
-      displayValue = "Empty / Refill Needed";
-      colorClass = "text-rose-400 animate-pulse font-bold";
-    }
-  } else if (type === 'tray') {
-    // Logika UI Khusus saat Fase Hatching aktif (Hari 19-22)
-    if (value === 'STOPPED') {
-       icon = <AlertCircle className="w-5 h-5 text-amber-500" />;
-       displayValue = "Fase Hatching (Berhenti)";
-       colorClass = "text-amber-400 font-bold";
-    } else {
-       icon = <RotateCw className="w-5 h-5 text-slate-400" />;
-       try {
-         displayValue = formatDistanceToNow(new Date(value), { addSuffix: true });
-         colorClass = "text-blue-400";
-       } catch {
-         displayValue = "Menunggu jadwal...";
-         colorClass = "text-slate-500";
-       }
-    }
-  }
+  const isWater = type === 'water';
+  const Icon = isWater ? Droplets : Egg;
 
   return (
-    <div className={cn(
-      "rounded-2xl bg-slate-900 border p-6 shadow-xl flex items-center justify-between transition-all duration-500",
-      value === false && type === 'water' ? "border-rose-500/50 shadow-[0_0_15px_rgba(225,29,72,0.1)]" : "border-white/5",
-      value === 'STOPPED' && type === 'tray' ? "border-amber-500/30 bg-amber-500/5" : ""
-    )}>
-      <div className="flex items-center gap-4">
-        <div className="p-3 bg-slate-800 rounded-xl border border-white/5 shadow-inner">
-          {icon}
+    <div
+      className="
+        relative overflow-hidden rounded-3xl
+        border border-cyan-500/10
+        bg-gradient-to-br from-[#081221] to-[#030b18]
+        p-5 shadow-xl shadow-cyan-500/5
+      "
+    >
+      <div className="absolute bottom-0 left-0 w-20 h-20 bg-cyan-500/5 blur-3xl" />
+
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="p-3 rounded-2xl bg-cyan-500/15">
+            <Icon className="w-5 h-5 text-cyan-300" />
+          </div>
+
+          <span
+            className={`
+              px-3 py-1 rounded-full text-xs font-bold
+              ${
+                isWater
+                  ? value
+                    ? 'bg-cyan-500/15 text-cyan-300'
+                    : 'bg-red-500/15 text-red-300'
+                  : 'bg-cyan-500/15 text-cyan-300'
+              }
+            `}
+          >
+            {isWater ? (value ? 'OK' : 'LOW') : 'LIVE'}
+          </span>
         </div>
-        <div className="flex flex-col">
-          <span className="text-slate-400 text-xs font-semibold tracking-widest uppercase mb-1">{title}</span>
-          <span className={cn("text-lg font-semibold", colorClass)}>{displayValue}</span>
-        </div>
+
+        <p className="text-slate-400 text-xs uppercase tracking-widest">
+          {title}
+        </p>
+
+        <h2 className="text-2xl font-bold text-white mt-2">
+          {isWater
+            ? (value ? 'Available' : 'Empty')
+            : 'Servo Active'}
+        </h2>
+
+        {isWater ? (
+          <div className="mt-5 h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className={`
+                h-full rounded-full
+                ${
+                  value
+                    ? 'bg-gradient-to-r from-cyan-400 to-sky-500'
+                    : 'bg-gradient-to-r from-red-400 to-red-500'
+                }
+              `}
+              style={{
+                width: value ? '85%' : '20%'
+              }}
+            />
+          </div>
+        ) : (
+          <div className="mt-5 flex gap-2">
+            {[1, 2, 3, 4, 5].map((dot) => (
+              <div
+                key={dot}
+                className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

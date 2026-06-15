@@ -1,53 +1,188 @@
-// src/components/DashboardLayout.jsx
 import React from 'react';
-import { Activity, AlertTriangle } from 'lucide-react';
-import { cn } from '../lib/utils'; // Pastikan import utilitas classNames kamu
+import {
+  LayoutDashboard,
+  Database,
+  Wifi,
+  WifiOff
+} from 'lucide-react';
+import incubatorImg from '../assets/incubator.png';
 
-export function DashboardLayout({ children, isOffline }) {
+export function DashboardLayout({
+  children,
+  activePage,
+  setActivePage,
+  isOffline
+}) {
+  const menu = [
+    {
+      id: 'overview',
+      label: 'Overview',
+      icon: LayoutDashboard
+    },
+    {
+      id: 'logs',
+      label: 'Logs',
+      icon: Database
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-4 sm:p-6 lg:p-8 font-sans selection:bg-slate-700">
-      <div className="max-w-7xl mx-auto space-y-6">
-        
-        {/* Banner Peringatan Kritis Jika Alat Mati */}
-        {isOffline && (
-          <div className="bg-rose-500/10 border border-rose-500/50 text-rose-400 p-4 rounded-xl flex items-center justify-center gap-3 animate-pulse shadow-[0_0_20px_rgba(225,29,72,0.2)]">
-            <AlertTriangle className="w-6 h-6" />
-            <span className="font-bold tracking-wider uppercase">
-              ERROR KRITIS: KONEKSI KE PERANGKAT TERPUTUS. PERIKSA POWER/WIFI ESP32.
-            </span>
-          </div>
-        )}
+    <div className="h-screen bg-[#020817] text-white flex overflow-hidden">
+      {/* SIDEBAR */}
+      <aside
+        className="
+          w-72
+          bg-gradient-to-b from-[#050d1a] to-[#081221]
+          border-r border-cyan-500/10
+          flex flex-col
+          p-5
+        "
+      >
+        {/* TOP BRAND */}
+        <div
+          className="
+            rounded-3xl
+            border border-cyan-500/15
+            bg-gradient-to-b from-[#071226] to-[#030b18]
+            p-5
+            shadow-xl shadow-cyan-500/5
+          "
+        >
+          <img
+            src={incubatorImg}
+            alt="Egg Incubator"
+            className="
+              w-44 h-44
+              object-contain
+              mx-auto
+              drop-shadow-[0_0_30px_rgba(34,211,238,0.25)]
+            "
+          />
 
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-6">
-          <div>
-            <h1 className="text-3xl font-light text-white tracking-tight">
-              Incubator <span className="font-semibold text-slate-100">Dash</span>
-            </h1>
-            <p className="text-slate-400 text-sm mt-1">Real-time Telemetry & Diagnostics</p>
-          </div>
-          
-          {/* Indikator Status di Kanan Atas */}
-          <div className={cn(
-            "flex items-center gap-3 px-5 py-2.5 rounded-full border shadow-sm transition-colors duration-500",
-            isOffline 
-              ? "bg-rose-500/10 text-rose-400 border-rose-500/20" 
-              : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.15)]"
-          )}>
-            {isOffline ? (
-              <AlertTriangle className="w-4 h-4" />
-            ) : (
-              <Activity className="w-4 h-4 animate-pulse" />
-            )}
-            <span className="text-sm font-bold tracking-wider uppercase">
-              {isOffline ? "System Error" : "System Status: Online"}
-            </span>
-          </div>
-        </header>
+          <h1 className="text-4xl font-bold text-white text-center mt-4">
+            Smart Incubator
+          </h1>
 
-        <main className={cn("space-y-6 transition-opacity duration-500", isOffline && "opacity-50 pointer-events-none")}>
-          {children}
-        </main>
-      </div>
+          <p className="text-slate-400 text-lg text-center mt-2">
+            IoT Monitoring System
+          </p>
+        </div>
+
+        {/* MENU */}
+        <div className="mt-6 space-y-3">
+          {menu.map((item) => {
+            const Icon = item.icon;
+            const active = activePage === item.id;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActivePage(item.id)}
+                className={`
+                  w-full flex items-center gap-4
+                  px-5 py-4 rounded-2xl
+                  transition-all duration-300
+                  ${
+                    active
+                      ? 'bg-cyan-500/15 border border-cyan-400/30 shadow-lg shadow-cyan-500/10'
+                      : 'bg-slate-900/30 border border-cyan-500/10 hover:bg-slate-800/50'
+                  }
+                `}
+              >
+                <div
+                  className={`
+                    p-3 rounded-xl
+                    ${
+                      active
+                        ? 'bg-cyan-500/20 text-cyan-300'
+                        : 'bg-slate-800 text-slate-400'
+                    }
+                  `}
+                >
+                  <Icon size={22} />
+                </div>
+
+                <span
+                  className={`
+                    text-xl font-medium
+                    ${
+                      active
+                        ? 'text-cyan-200'
+                        : 'text-slate-300'
+                    }
+                  `}
+                >
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* DEVICE STATUS */}
+        <div className="mt-auto">
+          <div
+            className={`
+              rounded-3xl
+              p-5
+              border
+              shadow-xl
+              ${
+                isOffline
+                  ? 'bg-red-500/10 border-red-500/20 shadow-red-500/10'
+                  : 'bg-cyan-500/10 border-cyan-500/20 shadow-cyan-500/10'
+              }
+            `}
+          >
+            <div className="flex items-center gap-4">
+              <div
+                className={`
+                  p-4 rounded-2xl
+                  ${
+                    isOffline
+                      ? 'bg-red-500/20 text-red-400'
+                      : 'bg-cyan-500/20 text-cyan-300'
+                  }
+                `}
+              >
+                {isOffline ? (
+                  <WifiOff size={28} />
+                ) : (
+                  <Wifi size={28} />
+                )}
+              </div>
+
+              <div>
+                <p className="text-slate-400 text-sm">
+                  Device Status
+                </p>
+
+                <p
+                  className={`
+                    text-2xl font-bold
+                    ${
+                      isOffline
+                        ? 'text-red-400'
+                        : 'text-cyan-300'
+                    }
+                  `}
+                >
+                  {isOffline ? 'OFFLINE' : 'ONLINE'}
+                </p>
+
+                <p className="text-slate-500 text-sm mt-1">
+                  ESP8266 Connected
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* MAIN */}
+      <main className="flex-1 overflow-auto p-5">
+        {children}
+      </main>
     </div>
   );
 }

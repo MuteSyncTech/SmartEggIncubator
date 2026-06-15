@@ -1,58 +1,67 @@
-import React from "react";
-import { cn } from "../lib/utils";
-import { Thermometer, Droplets } from "lucide-react";
+import React from 'react';
+import {
+  Thermometer,
+  Droplets
+} from 'lucide-react';
 
 export function MetricCard({ title, value, unit, type }) {
-  // Logic for color
-  let colorClass = "text-slate-200";
-  let bgGradient = "";
-  let icon = null;
+  const config = {
+    temperature: {
+      icon: Thermometer,
+      color: 'text-cyan-300',
+      bg: 'bg-cyan-500/15',
+      bars: [30, 45, 35, 70, 55, 80, 60]
+    },
+    humidity: {
+      icon: Droplets,
+      color: 'text-blue-300',
+      bg: 'bg-blue-500/15',
+      bars: [50, 65, 40, 55, 75, 60, 85]
+    }
+  };
 
-  if (type === "temperature") {
-    icon = <Thermometer className="w-6 h-6 text-slate-400" />;
-    if (value < 37 || value > 38) {
-      colorClass = "text-rose-400";
-      bgGradient = "from-rose-500/5 to-transparent";
-    } else {
-      colorClass = "text-emerald-400";
-      bgGradient = "from-emerald-500/5 to-transparent";
-    }
-  } else if (type === "humidity") {
-    icon = <Droplets className="w-6 h-6 text-slate-400" />;
-    if (value < 50) {
-      colorClass = "text-amber-400";
-      bgGradient = "from-amber-500/5 to-transparent";
-    } else {
-      colorClass = "text-emerald-400";
-      bgGradient = "from-emerald-500/5 to-transparent";
-    }
-  }
+  const item = config[type];
+  const Icon = item.icon;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-slate-900 border border-white/5 p-6 shadow-2xl backdrop-blur-xl transition-all duration-300">
-      <div
-        className={cn(
-          "absolute inset-0 bg-linear-to-br opacity-50 transition-colors duration-500",
-          bgGradient,
-        )}
-      />
-      <div className="relative z-10 flex flex-col h-full justify-between">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-slate-400 font-medium tracking-wide uppercase text-sm">
-            {title}
-          </h3>
-          {icon}
+    <div
+      className="
+        relative overflow-hidden rounded-3xl
+        border border-cyan-500/10
+        bg-gradient-to-br from-[#081221] to-[#030b18]
+        p-5 shadow-xl shadow-cyan-500/5
+      "
+    >
+      <div className="absolute top-0 right-0 w-20 h-20 bg-cyan-500/5 blur-3xl" />
+
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <div className={`p-3 rounded-2xl ${item.bg}`}>
+            <Icon className={`w-5 h-5 ${item.color}`} />
+          </div>
+
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
         </div>
-        <div className="flex items-baseline gap-1">
-          <span
-            className={cn(
-              "text-5xl font-bold tracking-tighter tabular-nums drop-shadow-sm transition-colors duration-300",
-              colorClass,
-            )}
-          >
-            {value.toFixed(1)}
+
+        <p className="text-slate-400 text-xs uppercase tracking-widest">
+          {title}
+        </p>
+
+        <h2 className="text-3xl font-bold text-white mt-2">
+          {value}
+          <span className={`text-sm ml-1 ${item.color}`}>
+            {unit}
           </span>
-          <span className="text-slate-500 font-medium text-lg">{unit}</span>
+        </h2>
+
+        <div className="mt-5 h-12 flex items-end gap-1">
+          {item.bars.map((height, index) => (
+            <div
+              key={index}
+              className="flex-1 rounded-full bg-cyan-500/20"
+              style={{ height: `${height}%` }}
+            />
+          ))}
         </div>
       </div>
     </div>
