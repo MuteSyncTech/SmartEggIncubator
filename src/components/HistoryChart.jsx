@@ -59,8 +59,8 @@ export function HistoryChart({ data }) {
             stroke="#94a3b8"
             tick={{ fill: '#94a3b8', fontSize: 10 }}
           />
-
           <YAxis
+            domain={[35, 80]}
             stroke="#94a3b8"
             tick={{ fill: '#94a3b8', fontSize: 10 }}
           />

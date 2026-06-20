@@ -46,7 +46,7 @@ function App() {
             />
 
             <StatusCard
-              title="Last Egg Turn"
+              title="Last Update Data"
               value={data.lastTurnTimestamp}
               type="tray"
             />

@@ -33,11 +33,11 @@ export function StatusCard({ title, value, type }) {
                   ? value
                     ? 'bg-cyan-500/15 text-cyan-300'
                     : 'bg-red-500/15 text-red-300'
-                  : 'bg-cyan-500/15 text-cyan-300'
+                  : 'bg-green-500/15 text-green-300'
               }
             `}
           >
-            {isWater ? (value ? 'OK' : 'LOW') : 'LIVE'}
+            {isWater ? (value ? 'OK' : 'LOW') : 'UPDATED'}
           </span>
         </div>
 
@@ -45,11 +45,17 @@ export function StatusCard({ title, value, type }) {
           {title}
         </p>
 
-        <h2 className="text-2xl font-bold text-white mt-2">
+        <h2 className="text-xl font-bold text-white mt-2 break-words">
           {isWater
             ? (value ? 'Available' : 'Empty')
-            : 'Servo Active'}
+            : (value || '-')}
         </h2>
+
+        {!isWater && (
+          <p className="text-slate-400 text-sm mt-2">
+            Last Monitoring Data
+          </p>
+        )}
 
         {isWater ? (
           <div className="mt-5 h-2 bg-slate-800 rounded-full overflow-hidden">
@@ -72,7 +78,7 @@ export function StatusCard({ title, value, type }) {
             {[1, 2, 3, 4, 5].map((dot) => (
               <div
                 key={dot}
-                className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"
+                className="w-2 h-2 rounded-full bg-green-400"
               />
             ))}
           </div>
