@@ -150,7 +150,7 @@ export function ActuatorStatus({ actuators }) {
                 </h3>
 
                 <p className="text-white text-3xl font-bold mt-3">
-                  {item.active ? 'ON' : 'IDLE'}
+                  {item.active ? 'ON' : 'OFF'}
                 </p>
               </div>
 
