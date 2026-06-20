@@ -70,7 +70,7 @@ export function DataLogTable({ logs }) {
 
                 <td className="py-4">
                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${badge(log.servo)}`}>
-                    {log.servo ? 'ACTIVE' : 'IDLE'}
+                    {log.servo ? 'ON' : 'OFF'}
                   </span>
                 </td>
               </tr>
