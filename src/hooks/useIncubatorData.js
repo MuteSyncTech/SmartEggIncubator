@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 export function useIncubatorData() {
@@ -18,15 +18,7 @@ export function useIncubatorData() {
     lastTurnTimestamp: "-"
   });
 
-  useEffect(() => {
-    fetchData();
-
-    const interval = setInterval(fetchData, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     const { data: sensorData, error } = await supabase
       .from('sensor_data')
       .select('*')
@@ -43,19 +35,22 @@ export function useIncubatorData() {
 
     const latest = sensorData[0];
 
+    console.log("LATEST DATA:", latest);
+
     const deviceOffline =
       (new Date() - new Date(latest.created_at)) > 30000;
 
     setData({
       temperature: latest.suhu || 0,
       humidity: latest.kelembapan || 0,
+
       waterLevel: !latest.air_habis,
 
       actuators: {
-        heater: latest.heater || false,
-        fan: latest.fan || false,
-        pump: latest.pompa || false,
-        servo: latest.servo || false
+        heater: Boolean(latest.heater),
+        fan: Boolean(latest.fan),
+        pump: Boolean(latest.pompa),
+        servo: Boolean(latest.servo)
       },
 
       history: sensorData
@@ -82,7 +77,39 @@ export function useIncubatorData() {
         minute: '2-digit'
       })
     });
-  }
+  }, []);
+
+  useEffect(() => {
+    // Fetch pertama kali
+    fetchData();
+
+    // Polling backup tiap 5 detik
+    const interval = setInterval(fetchData, 5000);
+
+    // Realtime subscription — update langsung saat ESP32 kirim data baru
+    const channel = supabase
+      .channel('sensor_data_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sensor_data'
+        },
+        (payload) => {
+          console.log('REALTIME INSERT:', payload.new);
+          fetchData();
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime status:', status);
+      });
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+  }, [fetchData]);
 
   return { data };
 }

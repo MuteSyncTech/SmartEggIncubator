@@ -26,7 +26,7 @@ export function ActuatorStatus({ actuators }) {
     },
     {
       title: 'Water Pump',
-      active: actuators?.pompa,
+      active: actuators?.pump,
       icon: Droplets,
       graph: 'dots',
       iconBg: 'bg-cyan-500/10',
