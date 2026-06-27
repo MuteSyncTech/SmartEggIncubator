@@ -66,7 +66,6 @@ export function HistoryChart({ data }) {
           />
 
           <Tooltip
-          <Tooltip
   content={({ active, payload }) => {
     if (!active || !payload || !payload.length) return null;
 
