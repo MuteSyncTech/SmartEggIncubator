@@ -81,7 +81,7 @@ export function DataLogTable() {
               onClick={() => handleSelectDay(day)}
               className="
                 group flex flex-col items-center justify-center
-                aspect-square rounded-2xl border
+                h-16 rounded-2xl border
                 bg-slate-800/40 border-slate-700/30
                 hover:bg-cyan-500/10 hover:border-cyan-500/40
                 hover:shadow-lg hover:shadow-cyan-500/10
@@ -91,7 +91,7 @@ export function DataLogTable() {
               <span className="text-[11px] text-slate-500 font-medium group-hover:text-cyan-500 transition-colors">
                 Hari
               </span>
-              <span className="text-3xl font-bold text-slate-300 group-hover:text-cyan-300 mt-0.5 transition-colors">
+              <span className="text-lg font-bold text-slate-300 group-hover:text-cyan-300 mt-0.5 transition-colors">
                 {day}
               </span>
             </button>
@@ -273,3 +273,5 @@ export function DataLogTable() {
     </div>
   );
 }
+
+
