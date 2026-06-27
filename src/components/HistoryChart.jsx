@@ -65,7 +65,24 @@ export function HistoryChart({ data }) {
             tick={{ fill: '#94a3b8', fontSize: 10 }}
           />
 
-          <Tooltip/>
+          <Tooltip
+          <Tooltip
+  content={({ active, payload }) => {
+    if (!active || !payload || !payload.length) return null;
+
+    console.log(payload);
+
+    return (
+      <div style={{ background: "#fff", padding: 10 }}>
+        {payload.map((item, i) => (
+          <div key={i}>
+            {item.dataKey} : {item.value}
+          </div>
+        ))}
+      </div>
+    );
+  }}
+/>
 
           <Legend />
 
