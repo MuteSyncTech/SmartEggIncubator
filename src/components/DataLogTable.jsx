@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, Database, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const START_DATE = new Date('2026-05-31T17:00:00Z'); // Hari ke-1 = 1 Juni 2026 00:00 WIB
-const DAY_MIN = 6;
+const DAY_MIN = 1;
 const DAY_MAX = 21;
 const LOGS_PER_DAY = 20;
 
@@ -22,8 +22,41 @@ export function DataLogTable() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [dayHasData, setDayHasData] = useState({});
+  const [loadingDays, setLoadingDays] = useState(true);
 
   const days = Array.from({ length: DAY_MAX - DAY_MIN + 1 }, (_, i) => DAY_MIN + i);
+
+  // Cek hari mana yang ada datanya
+  useEffect(() => {
+    const checkDays = async () => {
+      setLoadingDays(true);
+      const startRange = getDateRangeForDay(6).start; // mulai hari ke-6
+      const endRange = getDateRangeForDay(DAY_MAX).end;
+
+      const { data } = await supabase
+        .from('sensor_data')
+        .select('created_at')
+        .gte('created_at', startRange.toISOString())
+        .lte('created_at', endRange.toISOString())
+        .not('suhu', 'is', null)
+        .gte('suhu', 36);
+
+      if (data) {
+        const counts = {};
+        data.forEach((row) => {
+          const diffMs = new Date(row.created_at) - START_DATE;
+          const day = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+          if (day >= 1 && day <= DAY_MAX) {
+            counts[day] = (counts[day] || 0) + 1;
+          }
+        });
+        setDayHasData(counts);
+      }
+      setLoadingDays(false);
+    };
+    checkDays();
+  }, []);
 
   const handleSelectDay = async (day) => {
     setSelectedDay(day);
@@ -33,15 +66,15 @@ export function DataLogTable() {
     const { start, end } = getDateRangeForDay(day);
 
     const { data } = await supabase
-  .from('sensor_data')
-  .select('*')
-  .gte('created_at', start.toISOString())
-  .lte('created_at', end.toISOString())
-  .not('suhu', 'is', null)
-  .not('kelembapan', 'is', null)
-  .gte('suhu', 36)                // tambahkan ini
-  .order('created_at', { ascending: false })
-  .limit(LOGS_PER_DAY);
+      .from('sensor_data')
+      .select('*')
+      .gte('created_at', start.toISOString())
+      .lte('created_at', end.toISOString())
+      .not('suhu', 'is', null)
+      .not('kelembapan', 'is', null)
+      .gte('suhu', 36)
+      .order('created_at', { ascending: false })
+      .limit(LOGS_PER_DAY);
 
     setLogs(data || []);
     setLoading(false);
@@ -58,7 +91,7 @@ export function DataLogTable() {
   // ── DAY PICKER ─────────────────────────────────────────────────────
   if (selectedDay === null) {
     return (
-      <div className="rounded-3xl border border-cyan-500/10 bg-gradient-to-br from-[#0b1730] to-[#081221] p-8 shadow-2xl shadow-cyan-500/5 min-h-[calc(100vh-48px)] flex flex-col">
+      <div className="rounded-3xl border border-cyan-500/10 bg-gradient-to-br from-[#0b1730] to-[#081221] p-8 shadow-2xl shadow-cyan-500/5">
         {/* Header */}
         <div className="flex items-center gap-4 mb-2">
           <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
@@ -66,44 +99,63 @@ export function DataLogTable() {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white tracking-tight">Datalog Sensor</h2>
-            <p className="text-slate-500 text-xl mt-1">Pilih hari inkubasi yang ingin ditampilkan</p>
+            <p className="text-slate-500 text-sm mt-0.5">Pilih hari inkubasi yang ingin ditampilkan</p>
           </div>
         </div>
 
-        {/* Divider */}
         <div className="border-t border-white/5 my-6" />
 
         {/* Grid */}
-        <div className="flex-1 pt-8"><div className="grid grid-cols-4 gap-6 h-full">
-          {days.map((day) => (
-            <button
-              key={day}
-              onClick={() => handleSelectDay(day)}
-              className="
-                group flex flex-col items-center justify-center
-                h-32 rounded-3xl border
-                bg-slate-800/40 border-slate-700/30
-                hover:bg-cyan-500/10 hover:border-cyan-500/40
-                hover:shadow-lg hover:shadow-cyan-500/10
-                transition-all duration-200
-              "
-            >
-              <span className="text-base text-slate-400 font-medium mb-3">
-                Hari
-              </span>
-              <span className="text-3xl font-bold text-white group-hover:text-cyan-300 transition-colors">
-                {day}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        </div>
+        {loadingDays ? (
+          <div className="flex items-center justify-center py-16 gap-3">
+            <Loader2 size={22} className="text-cyan-400 animate-spin" />
+            <span className="text-slate-400 text-sm">Memeriksa data...</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-7 gap-3">
+            {days.map((day) => {
+              const hasData = Boolean(dayHasData[day]);
+              return (
+                <button
+                  key={day}
+                  onClick={() => handleSelectDay(day)}
+                  className={`
+                    group flex flex-col items-center justify-center
+                    h-24 rounded-2xl border transition-all duration-200
+                    ${hasData
+                      ? 'bg-cyan-500/10 border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400/60 hover:shadow-lg hover:shadow-cyan-500/10'
+                      : 'bg-slate-800/40 border-slate-700/30 hover:bg-slate-700/40 cursor-pointer'
+                    }
+                  `}
+                >
+                  <span className={`text-[11px] font-medium transition-colors ${hasData ? 'text-cyan-600 group-hover:text-cyan-500' : 'text-slate-600'}`}>
+                    Hari
+                  </span>
+                  <span className={`text-2xl font-bold mt-0.5 transition-colors ${hasData ? 'text-cyan-300' : 'text-slate-500'}`}>
+                    {day}
+                  </span>
+                  <span className={`text-[10px] mt-1 font-medium ${hasData ? 'text-cyan-500' : 'text-slate-600'}`}>
+                    {hasData ? 'ada data' : 'kosong'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Footer */}
-        <div className="mt-auto pt-5 border-t border-white/5 flex items-center justify-between">
-          <p className="text-slate-400 text-base font-medium">Total {DAY_MAX - DAY_MIN + 1} hari inkubasi</p>
-          <p className="text-slate-400 text-base font-medium">Hari ke-{DAY_MIN} – Hari ke-{DAY_MAX}</p>
+        <div className="mt-6 pt-5 border-t border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-cyan-500/70"></div>
+              <span className="text-slate-400 text-xs">Ada data</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-slate-600/70"></div>
+              <span className="text-slate-400 text-xs">Belum ada data</span>
+            </div>
+          </div>
+          <p className="text-slate-600 text-xs">Hari ke-{DAY_MIN} – Hari ke-{DAY_MAX}</p>
         </div>
       </div>
     );
@@ -111,7 +163,7 @@ export function DataLogTable() {
 
   // ── LOG TABLE ──────────────────────────────────────────────────────
   return (
-    <div className="rounded-3xl border border-cyan-500/10 bg-gradient-to-br from-[#0b1730] to-[#081221] p-8 shadow-2xl shadow-cyan-500/5 min-h-[calc(100vh-48px)] flex flex-col">
+    <div className="rounded-3xl border border-cyan-500/10 bg-gradient-to-br from-[#0b1730] to-[#081221] p-8 shadow-2xl shadow-cyan-500/5">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div className="flex items-center gap-4">
@@ -140,7 +192,6 @@ export function DataLogTable() {
             <ChevronLeft size={16} />
           </button>
 
-          {/* Day chips */}
           <div className="flex items-center gap-1.5">
             {days.filter((d) => Math.abs(d - selectedDay) <= 2).map((d) => (
               <button
@@ -186,7 +237,6 @@ export function DataLogTable() {
 
       <div className="border-t border-white/5 mb-5" />
 
-      {/* Content */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/20">
@@ -221,7 +271,7 @@ export function DataLogTable() {
             </thead>
             <tbody className="divide-y divide-white/[0.04]">
               {logs.map((log, idx) => (
-                <tr key={idx} className="hover:bg-white/[0.02] transition-colors group">
+                <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
                   <td className="py-3.5 pr-4 text-slate-600 text-xs font-mono">
                     {String(idx + 1).padStart(2, '0')}
                   </td>
@@ -265,15 +315,12 @@ export function DataLogTable() {
         </div>
       )}
 
-      {/* Footer */}
       {!loading && logs.length > 0 && (
         <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
-          <span className="text-slate-600 text-xs">Hari ke-{selectedDay} dari {DAY_MAX - DAY_MIN + 1} hari inkubasi</span>
+          <span className="text-slate-600 text-xs">Hari ke-{selectedDay} dari {DAY_MAX} hari inkubasi</span>
           <span className="text-slate-600 text-xs">{logs.length}/{LOGS_PER_DAY} data ditampilkan</span>
         </div>
       )}
     </div>
   );
 }
-
-
