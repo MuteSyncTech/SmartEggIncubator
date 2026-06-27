@@ -33,15 +33,15 @@ export function DataLogTable() {
     const { start, end } = getDateRangeForDay(day);
 
     const { data } = await supabase
-      .from('sensor_data')
-      .select('*')
-      .gte('created_at', start.toISOString())
-      .lte('created_at', end.toISOString())
-      .not('suhu', 'is', null)
-      .not('kelembapan', 'is', null)
-      .gte('suhu', 36)
-      .order('created_at', { ascending: false })
-      .limit(LOGS_PER_DAY);
+  .from('sensor_data')
+  .select('*')
+  .gte('created_at', start.toISOString())
+  .lte('created_at', end.toISOString())
+  .not('suhu', 'is', null)
+  .not('kelembapan', 'is', null)
+  .gte('suhu', 36)                // tambahkan ini
+  .order('created_at', { ascending: false })
+  .limit(LOGS_PER_DAY);
 
     setLogs(data || []);
     setLoading(false);
@@ -74,7 +74,7 @@ export function DataLogTable() {
         <div className="border-t border-white/5 my-6" />
 
         {/* Grid */}
-        <div className="grid grid-cols-8 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           {days.map((day) => (
             <button
               key={day}
