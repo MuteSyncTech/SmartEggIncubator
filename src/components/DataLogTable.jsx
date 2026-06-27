@@ -58,7 +58,7 @@ export function DataLogTable() {
   // ── DAY PICKER ─────────────────────────────────────────────────────
   if (selectedDay === null) {
     return (
-      <div className="rounded-3xl border border-cyan-500/10 bg-gradient-to-br from-[#0b1730] to-[#081221] p-8 shadow-2xl shadow-cyan-500/5">
+      <div className="rounded-3xl border border-cyan-500/10 bg-gradient-to-br from-[#0b1730] to-[#081221] p-8 shadow-2xl shadow-cyan-500/5 min-h-[calc(100vh-48px)] flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-4 mb-2">
           <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
@@ -74,7 +74,7 @@ export function DataLogTable() {
         <div className="border-t border-white/5 my-6" />
 
         {/* Grid */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="flex-1 flex items-center"><div className="grid grid-cols-4 gap-4 w-full">
           {days.map((day) => (
             <button
               key={day}
@@ -98,8 +98,10 @@ export function DataLogTable() {
           ))}
         </div>
 
+        </div>
+
         {/* Footer */}
-        <div className="mt-6 pt-5 border-t border-white/5 flex items-center justify-between">
+        <div className="mt-auto pt-5 border-t border-white/5 flex items-center justify-between">
           <p className="text-slate-600 text-xs">Total {DAY_MAX - DAY_MIN + 1} hari inkubasi</p>
           <p className="text-slate-600 text-xs">Hari ke-{DAY_MIN} – Hari ke-{DAY_MAX}</p>
         </div>
@@ -109,7 +111,7 @@ export function DataLogTable() {
 
   // ── LOG TABLE ──────────────────────────────────────────────────────
   return (
-    <div className="rounded-3xl border border-cyan-500/10 bg-gradient-to-br from-[#0b1730] to-[#081221] p-8 shadow-2xl shadow-cyan-500/5">
+    <div className="rounded-3xl border border-cyan-500/10 bg-gradient-to-br from-[#0b1730] to-[#081221] p-8 shadow-2xl shadow-cyan-500/5 min-h-[calc(100vh-48px)] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div className="flex items-center gap-4">
