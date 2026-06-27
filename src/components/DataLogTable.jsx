@@ -25,6 +25,8 @@ function getDateRangeForDay(dayNumber) {
   end.setUTCMilliseconds(end.getUTCMilliseconds() - 1);
 
   return { start, end };
+  console.log(`Hari ke-${dayNumber}: ${start.toISOString()} s/d ${end.toISOString()}`);
+  return { start, end };
 }
 
 function formatTanggal(dayNumber) {
