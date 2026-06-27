@@ -87,22 +87,22 @@ export function HistoryChart({ data }) {
           <Legend />
 
           <Area
-            type="monotone"
-            dataKey="temperature"
-            name="Temperature (°C)"
-            stroke="#38bdf8"
-            fill="url(#g1)"
-            strokeWidth={2.5}
-          />
+  type="monotone"
+  dataKey="humidity"
+  name="Humidity (%)"
+  stroke="#38bdf8"
+  fill="url(#g1)"
+  strokeWidth={2.5}
+/>
 
-          <Area
-            type="monotone"
-            dataKey="humidity"
-            name="Humidity (%)"
-            stroke="#2563eb"
-            fill="url(#g2)"
-            strokeWidth={2}
-          />
+<Area
+  type="monotone"
+  dataKey="temperature"
+  name="Temperature (°C)"
+  stroke="#2563eb"
+  fill="url(#g2)"
+  strokeWidth={2}
+/>
         </AreaChart>
       </ResponsiveContainer>
     </div>
