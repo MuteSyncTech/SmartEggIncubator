@@ -67,16 +67,36 @@ export function HistoryChart({ data }) {
 
           <Tooltip
   content={({ active, payload }) => {
-    if (!active || !payload || !payload.length) return null;
+    if (!active || !payload || payload.length === 0) return null;
 
     return (
-      <div style={{ background: "#fff", padding: 10, color: "#000" }}>
-        {payload.map((item, i) => (
-          <div key={i}>
-            {item.dataKey === "temperature"
-              ? "Temperature (°C)"
-              : "Humidity (%)"}{" "}
-            : {item.value}
+      <div
+        style={{
+          background: "#0f172a",
+          border: "1px solid rgba(56,189,248,0.25)",
+          borderRadius: "12px",
+          padding: "10px 14px",
+          color: "#e2e8f0",
+          boxShadow: "0 8px 24px rgba(0,0,0,.35)"
+        }}
+      >
+        {payload.map((item, index) => (
+          <div key={index} style={{ margin: "4px 0" }}>
+            <span
+              style={{
+                color:
+                  item.dataKey === "temperature"
+                    ? "#38bdf8"
+                    : "#2563eb",
+                fontWeight: 600
+              }}
+            >
+              {item.dataKey === "temperature"
+                ? "Temperature (°C)"
+                : "Humidity (%)"}
+            </span>
+            {" : "}
+            {item.value}
           </div>
         ))}
       </div>
