@@ -3,7 +3,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, Database, Loader2 } from 'luci
 import { supabase } from '../lib/supabase';
 
 // Hari ke-6 = 6 Juni 2026
-const START_DATE = new Date('2026-06-01T00:00:00+07:00');
+const START_DATE = new Date('2026-05-31T17:00:00Z');
 const DAY_MIN = 6;
 const DAY_MAX = 21;
 const LOGS_PER_DAY = 20;
