@@ -2,11 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, Database, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-export function DataLogTable() {
-  const DAY_MIN = 6;
-  const DAY_MAX = 21;
-  const LOGS_PER_DAY = 20;
+// Hari ke-6 = 6 Juni 2026
+const START_DATE = new Date('2026-06-01T00:00:00+07:00');
+const DAY_MIN = 6;
+const DAY_MAX = 21;
+const LOGS_PER_DAY = 20;
 
+function getDayNumber(date) {
+  const d = new Date(date);
+  const start = new Date(START_DATE);
+  const diffMs = d - start;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return diffDays + 1; // hari ke-1 = index 0
+}
+
+function getDateRangeForDay(dayNumber) {
+  const start = new Date(START_DATE);
+  start.setDate(start.getDate() + (dayNumber - 1));
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setHours(23, 59, 59, 999);
+
+  return { start, end };
+}
+
+function formatTanggal(dayNumber) {
+  const { start } = getDateRangeForDay(dayNumber);
+  return start.toLocaleDateString('id-ID', {
+    day: '2-digit', month: 'long', year: 'numeric'
+  });
+}
+
+export function DataLogTable() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -14,19 +42,25 @@ export function DataLogTable() {
 
   const days = Array.from({ length: DAY_MAX - DAY_MIN + 1 }, (_, i) => DAY_MIN + i);
 
-  // Cek hari mana yang ada datanya (untuk tampilan day picker)
+  // Cek hari mana yang ada datanya berdasarkan tanggal created_at
   useEffect(() => {
     const checkDays = async () => {
+      const startDate = new Date(START_DATE);
+      const endDate = getDateRangeForDay(DAY_MAX).end;
+
       const { data } = await supabase
         .from('sensor_data')
-        .select('hari')
-        .gte('hari', DAY_MIN)
-        .lte('hari', DAY_MAX);
+        .select('created_at')
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
 
       if (data) {
         const counts = {};
         data.forEach((row) => {
-          if (row.hari) counts[row.hari] = (counts[row.hari] || 0) + 1;
+          const day = getDayNumber(row.created_at);
+          if (day >= DAY_MIN && day <= DAY_MAX) {
+            counts[day] = (counts[day] || 0) + 1;
+          }
         });
         setDayHasData(counts);
       }
@@ -34,16 +68,19 @@ export function DataLogTable() {
     checkDays();
   }, []);
 
-  // Fetch 20 data terakhir saat user pilih hari
+  // Fetch 20 data terakhir berdasarkan tanggal
   const handleSelectDay = async (day) => {
     setSelectedDay(day);
     setLoading(true);
     setLogs([]);
 
+    const { start, end } = getDateRangeForDay(day);
+
     const { data } = await supabase
       .from('sensor_data')
       .select('*')
-      .eq('hari', day)
+      .gte('created_at', start.toISOString())
+      .lte('created_at', end.toISOString())
       .order('created_at', { ascending: false })
       .limit(LOGS_PER_DAY);
 
@@ -52,13 +89,11 @@ export function DataLogTable() {
   };
 
   const prevDay = () => {
-    const newDay = selectedDay > DAY_MIN ? selectedDay - 1 : selectedDay;
-    handleSelectDay(newDay);
+    if (selectedDay > DAY_MIN) handleSelectDay(selectedDay - 1);
   };
 
   const nextDay = () => {
-    const newDay = selectedDay < DAY_MAX ? selectedDay + 1 : selectedDay;
-    handleSelectDay(newDay);
+    if (selectedDay < DAY_MAX) handleSelectDay(selectedDay + 1);
   };
 
   const badge = (active) =>
@@ -80,7 +115,7 @@ export function DataLogTable() {
           Pilih hari inkubasi untuk menampilkan 20 data log terakhir
         </p>
 
-        <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
+        <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
           {days.map((day) => {
             const count = dayHasData[day] || 0;
             const hasData = count > 0;
@@ -102,9 +137,12 @@ export function DataLogTable() {
                 <span className={`text-2xl font-bold mt-0.5 ${hasData ? 'text-cyan-300' : 'text-slate-400'}`}>
                   {day}
                 </span>
+                <span className={`text-[9px] mt-0.5 font-medium ${hasData ? 'text-cyan-600' : 'text-slate-600'}`}>
+                  {formatTanggal(day).split(' ').slice(0, 2).join(' ')}
+                </span>
                 {hasData
-                  ? <span className="text-[10px] text-cyan-500 mt-0.5 font-semibold">ada data</span>
-                  : <span className="text-[10px] text-slate-600 mt-0.5">kosong</span>
+                  ? <span className="text-[9px] text-cyan-500 font-semibold">ada data</span>
+                  : <span className="text-[9px] text-slate-600">kosong</span>
                 }
               </button>
             );
@@ -120,7 +158,9 @@ export function DataLogTable() {
             <div className="w-3 h-3 rounded-full bg-slate-600/60"></div>
             <span className="text-slate-400 text-xs">Belum ada data</span>
           </div>
-          <span className="text-slate-600 text-xs ml-auto">Hari ke-{DAY_MIN} – {DAY_MAX}</span>
+          <span className="text-slate-600 text-xs ml-auto">
+            Hari ke-{DAY_MIN} (6 Jun) – Hari ke-{DAY_MAX} (26 Jun)
+          </span>
         </div>
       </div>
     );
@@ -136,10 +176,11 @@ export function DataLogTable() {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white leading-tight">
-              Log Hari ke-{selectedDay}
+              Hari ke-{selectedDay}
             </h2>
             <p className="text-slate-400 text-sm">
-              {loading ? 'Memuat data...' : `Menampilkan ${logs.length} data terakhir`}
+              {formatTanggal(selectedDay)} &nbsp;·&nbsp;{' '}
+              {loading ? 'Memuat data...' : `${logs.length} data terakhir`}
             </p>
           </div>
         </div>
@@ -196,7 +237,6 @@ export function DataLogTable() {
         </div>
       </div>
 
-      {/* Loading state */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 size={32} className="text-cyan-400 animate-spin mb-3" />
@@ -208,7 +248,7 @@ export function DataLogTable() {
             <Database size={32} className="text-slate-600" />
           </div>
           <p className="text-slate-400 font-medium">Tidak ada data untuk hari ke-{selectedDay}</p>
-          <p className="text-slate-600 text-sm mt-1">Data belum tersedia dari database</p>
+          <p className="text-slate-600 text-sm mt-1">{formatTanggal(selectedDay)}</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -267,7 +307,7 @@ export function DataLogTable() {
 
       <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
         <span className="text-slate-600 text-xs">
-          Hari ke-{selectedDay} dari rentang hari ke-{DAY_MIN}–{DAY_MAX}
+          Hari ke-{selectedDay} · {formatTanggal(selectedDay)}
         </span>
         <span className="text-slate-600 text-xs">
           {logs.length}/{LOGS_PER_DAY} data ditampilkan
