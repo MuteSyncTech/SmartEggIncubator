@@ -66,7 +66,7 @@ export function DataLogTable() {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white tracking-tight">Datalog Sensor</h2>
-            <p className="text-slate-500 text-sm mt-0.5">Pilih hari inkubasi yang ingin ditampilkan</p>
+            <p className="text-slate-500 text-xl mt-1">Pilih hari inkubasi yang ingin ditampilkan</p>
           </div>
         </div>
 
@@ -91,7 +91,7 @@ export function DataLogTable() {
               <span className="text-base text-slate-400 font-medium mb-3">
                 Hari
               </span>
-              <span className="text-5xl font-bold text-white group-hover:text-cyan-300 transition-colors">
+              <span className="text-3xl font-bold text-white group-hover:text-cyan-300 transition-colors">
                 {day}
               </span>
             </button>
