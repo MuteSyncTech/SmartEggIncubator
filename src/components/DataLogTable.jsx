@@ -1,39 +1,75 @@
 import React, { useState, useEffect } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, Database } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Database, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
-export function DataLogTable({ logs }) {
-  // logs is expected to be an array of entries, each having a `day` field (integer 6–21)
-  // or a `created_at` timestamp from which the day can be derived externally.
-  // The parent should pass ALL logs; this component filters by selected day.
-
+export function DataLogTable() {
   const DAY_MIN = 6;
   const DAY_MAX = 21;
   const LOGS_PER_DAY = 20;
 
-  const [selectedDay, setSelectedDay] = useState(null); // null = show day picker
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [dayHasData, setDayHasData] = useState({});
+
   const days = Array.from({ length: DAY_MAX - DAY_MIN + 1 }, (_, i) => DAY_MIN + i);
 
-  // Filter logs for the selected day and take the last 20
-  const filteredLogs = selectedDay !== null
-    ? (logs || [])
-        .filter((log) => Number(log.hari) === selectedDay)
-        .slice(-LOGS_PER_DAY)
-    : [];
+  // Cek hari mana yang ada datanya (untuk tampilan day picker)
+  useEffect(() => {
+    const checkDays = async () => {
+      const { data } = await supabase
+        .from('sensor_data')
+        .select('hari')
+        .gte('hari', DAY_MIN)
+        .lte('hari', DAY_MAX);
+
+      if (data) {
+        const counts = {};
+        data.forEach((row) => {
+          if (row.hari) counts[row.hari] = (counts[row.hari] || 0) + 1;
+        });
+        setDayHasData(counts);
+      }
+    };
+    checkDays();
+  }, []);
+
+  // Fetch 20 data terakhir saat user pilih hari
+  const handleSelectDay = async (day) => {
+    setSelectedDay(day);
+    setLoading(true);
+    setLogs([]);
+
+    const { data } = await supabase
+      .from('sensor_data')
+      .select('*')
+      .eq('hari', day)
+      .order('created_at', { ascending: false })
+      .limit(LOGS_PER_DAY);
+
+    setLogs(data || []);
+    setLoading(false);
+  };
+
+  const prevDay = () => {
+    const newDay = selectedDay > DAY_MIN ? selectedDay - 1 : selectedDay;
+    handleSelectDay(newDay);
+  };
+
+  const nextDay = () => {
+    const newDay = selectedDay < DAY_MAX ? selectedDay + 1 : selectedDay;
+    handleSelectDay(newDay);
+  };
 
   const badge = (active) =>
     active
       ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
       : 'bg-slate-700/60 text-slate-400 border border-slate-600/30';
 
-  // Navigate between days
-  const prevDay = () => setSelectedDay((d) => (d > DAY_MIN ? d - 1 : d));
-  const nextDay = () => setSelectedDay((d) => (d < DAY_MAX ? d + 1 : d));
-
   // ── DAY PICKER SCREEN ──────────────────────────────────────────────
   if (selectedDay === null) {
     return (
       <div className="rounded-3xl border border-cyan-500/10 bg-gradient-to-br from-[#0b1730] to-[#081221] p-6 shadow-2xl shadow-cyan-500/5">
-        {/* Header */}
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
             <CalendarDays size={22} />
@@ -44,19 +80,18 @@ export function DataLogTable({ logs }) {
           Pilih hari inkubasi untuk menampilkan 20 data log terakhir
         </p>
 
-        {/* Day grid */}
         <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
           {days.map((day) => {
-            const count = (logs || []).filter((l) => Number(l.hari) === day).length;
+            const count = dayHasData[day] || 0;
             const hasData = count > 0;
             return (
               <button
                 key={day}
-                onClick={() => setSelectedDay(day)}
+                onClick={() => handleSelectDay(day)}
                 className={`
                   relative flex flex-col items-center justify-center
                   aspect-square rounded-2xl border
-                  transition-all duration-200 group
+                  transition-all duration-200
                   ${hasData
                     ? 'bg-cyan-500/10 border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400/60 hover:shadow-lg hover:shadow-cyan-500/10'
                     : 'bg-slate-800/40 border-slate-700/30 hover:bg-slate-700/40 hover:border-slate-600/50'
@@ -67,20 +102,15 @@ export function DataLogTable({ logs }) {
                 <span className={`text-2xl font-bold mt-0.5 ${hasData ? 'text-cyan-300' : 'text-slate-400'}`}>
                   {day}
                 </span>
-                {hasData && (
-                  <span className="text-[10px] text-cyan-500 mt-0.5 font-semibold">
-                    {Math.min(count, LOGS_PER_DAY)} log
-                  </span>
-                )}
-                {!hasData && (
-                  <span className="text-[10px] text-slate-600 mt-0.5">kosong</span>
-                )}
+                {hasData
+                  ? <span className="text-[10px] text-cyan-500 mt-0.5 font-semibold">ada data</span>
+                  : <span className="text-[10px] text-slate-600 mt-0.5">kosong</span>
+                }
               </button>
             );
           })}
         </div>
 
-        {/* Legend */}
         <div className="flex items-center gap-6 mt-6 pt-5 border-t border-white/5">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-cyan-500/60"></div>
@@ -99,7 +129,6 @@ export function DataLogTable({ logs }) {
   // ── LOG TABLE SCREEN ───────────────────────────────────────────────
   return (
     <div className="rounded-3xl border border-cyan-500/10 bg-gradient-to-br from-[#0b1730] to-[#081221] p-6 shadow-2xl shadow-cyan-500/5">
-      {/* Header row */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
@@ -110,31 +139,29 @@ export function DataLogTable({ logs }) {
               Log Hari ke-{selectedDay}
             </h2>
             <p className="text-slate-400 text-sm">
-              Menampilkan {filteredLogs.length} data terakhir
+              {loading ? 'Memuat data...' : `Menampilkan ${logs.length} data terakhir`}
             </p>
           </div>
         </div>
 
-        {/* Day navigator */}
         <div className="flex items-center gap-2">
           <button
             onClick={prevDay}
-            disabled={selectedDay <= DAY_MIN}
+            disabled={selectedDay <= DAY_MIN || loading}
             className="p-2 rounded-xl bg-slate-800/60 border border-slate-700/40 text-slate-400
-                       hover:bg-slate-700/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed
-                       transition-all"
+                       hover:bg-slate-700/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             <ChevronLeft size={18} />
           </button>
 
-          {/* Day chips (show ±2 around current) */}
           <div className="flex items-center gap-1">
             {days
               .filter((d) => Math.abs(d - selectedDay) <= 2)
               .map((d) => (
                 <button
                   key={d}
-                  onClick={() => setSelectedDay(d)}
+                  onClick={() => handleSelectDay(d)}
+                  disabled={loading}
                   className={`
                     px-3 py-1.5 rounded-xl text-sm font-semibold border transition-all
                     ${d === selectedDay
@@ -150,15 +177,13 @@ export function DataLogTable({ logs }) {
 
           <button
             onClick={nextDay}
-            disabled={selectedDay >= DAY_MAX}
+            disabled={selectedDay >= DAY_MAX || loading}
             className="p-2 rounded-xl bg-slate-800/60 border border-slate-700/40 text-slate-400
-                       hover:bg-slate-700/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed
-                       transition-all"
+                       hover:bg-slate-700/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             <ChevronRight size={18} />
           </button>
 
-          {/* Back to picker */}
           <button
             onClick={() => setSelectedDay(null)}
             className="ml-2 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium border
@@ -171,8 +196,13 @@ export function DataLogTable({ logs }) {
         </div>
       </div>
 
-      {/* Table */}
-      {filteredLogs.length === 0 ? (
+      {/* Loading state */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 size={32} className="text-cyan-400 animate-spin mb-3" />
+          <p className="text-slate-400 text-sm">Memuat data hari ke-{selectedDay}...</p>
+        </div>
+      ) : logs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="p-5 rounded-2xl bg-slate-800/40 border border-slate-700/30 mb-4">
             <Database size={32} className="text-slate-600" />
@@ -195,51 +225,34 @@ export function DataLogTable({ logs }) {
                 <th className="text-left py-3 font-medium">Servo</th>
               </tr>
             </thead>
-
             <tbody>
-              {filteredLogs.map((log, idx) => (
-                <tr
-                  key={idx}
-                  className="border-b border-white/5 hover:bg-white/[0.03] transition"
-                >
+              {logs.map((log, idx) => (
+                <tr key={idx} className="border-b border-white/5 hover:bg-white/[0.03] transition">
                   <td className="py-3 pr-4 text-slate-600 text-xs font-mono">
                     {String(idx + 1).padStart(2, '0')}
                   </td>
-
                   <td className="py-3 pr-4 text-slate-300 font-mono text-xs">
                     {new Date(log.created_at).toLocaleTimeString('id-ID', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
+                      hour: '2-digit', minute: '2-digit', second: '2-digit',
                     })}
                   </td>
-
-                  <td className="py-3 pr-4 text-white font-semibold">
-                    {log.suhu}°C
-                  </td>
-
-                  <td className="py-3 pr-4 text-white font-semibold">
-                    {log.kelembapan}%
-                  </td>
-
+                  <td className="py-3 pr-4 text-white font-semibold">{log.suhu}°C</td>
+                  <td className="py-3 pr-4 text-white font-semibold">{log.kelembapan}%</td>
                   <td className="py-3 pr-4">
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${badge(log.heater)}`}>
                       {log.heater ? 'ON' : 'OFF'}
                     </span>
                   </td>
-
                   <td className="py-3 pr-4">
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${badge(log.fan)}`}>
                       {log.fan ? 'ON' : 'OFF'}
                     </span>
                   </td>
-
                   <td className="py-3 pr-4">
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${badge(log.pompa)}`}>
                       {log.pompa ? 'ON' : 'OFF'}
                     </span>
                   </td>
-
                   <td className="py-3">
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${badge(log.servo)}`}>
                       {log.servo ? 'ON' : 'OFF'}
@@ -252,13 +265,12 @@ export function DataLogTable({ logs }) {
         </div>
       )}
 
-      {/* Footer info */}
       <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
         <span className="text-slate-600 text-xs">
           Hari ke-{selectedDay} dari rentang hari ke-{DAY_MIN}–{DAY_MAX}
         </span>
         <span className="text-slate-600 text-xs">
-          {filteredLogs.length}/{LOGS_PER_DAY} data ditampilkan
+          {logs.length}/{LOGS_PER_DAY} data ditampilkan
         </span>
       </div>
     </div>

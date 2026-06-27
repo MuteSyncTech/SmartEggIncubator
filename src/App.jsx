@@ -20,46 +20,19 @@ function App() {
     >
       {activePage === 'overview' && (
         <div className="space-y-5">
-          {/* TOP HERO */}
           <ProgressTracker data={data} />
 
-          {/* TOP WIDGETS */}
           <div className="grid grid-cols-4 gap-5">
-            <MetricCard
-              title="Temperature"
-              value={data.temperature}
-              unit="°C"
-              type="temperature"
-            />
-
-            <MetricCard
-              title="Humidity"
-              value={data.humidity}
-              unit="%"
-              type="humidity"
-            />
-
-            <StatusCard
-              title="Water Tank"
-              value={data.waterLevel}
-              type="water"
-            />
-
-            <StatusCard
-              title="Last Update Data"
-              value={data.lastTurnTimestamp}
-              type="tray"
-            />
+            <MetricCard title="Temperature" value={data.temperature} unit="°C" type="temperature" />
+            <MetricCard title="Humidity" value={data.humidity} unit="%" type="humidity" />
+            <StatusCard title="Water Tank" value={data.waterLevel} type="water" />
+            <StatusCard title="Last Update Data" value={data.lastTurnTimestamp} type="tray" />
           </div>
 
-          {/* BOTTOM SECTION */}
           <div className="grid grid-cols-12 gap-5 mt-2 items-stretch">
-            {/* LEFT ACTUATORS */}
             <div className="col-span-4">
               <ActuatorStatus actuators={data.actuators} />
             </div>
-
-            {/* RIGHT ANALYTICS */}
             <div className="col-span-8">
               <HistoryChart data={data.history} />
             </div>
@@ -68,7 +41,7 @@ function App() {
       )}
 
       {activePage === 'logs' && (
-        <DataLogTable logs={data.logs} />
+        <DataLogTable />
       )}
     </DashboardLayout>
   );
