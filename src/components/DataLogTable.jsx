@@ -6,11 +6,8 @@ const DAY_MIN = 1;
 const DAY_MAX = 21;
 const LOGS_PER_DAY = 20;
 
-// Hari ke-N = tanggal N Juni 2026 (WIB = UTC+7)
-// Jadi hari ke-6 = 6 Juni 2026 00:00 WIB = 5 Juni 2026 17:00 UTC
 function getDateRangeForDay(dayNumber) {
-  // Start = tanggal dayNumber Juni 2026 00:00 WIB = 17:00 UTC hari sebelumnya
-  const startUTC = new Date(Date.UTC(2026, 5, dayNumber - 1, 17, 0, 0, 0)); // bulan 5 = Juni (0-indexed)
+  const startUTC = new Date(Date.UTC(2026, 5, dayNumber - 1, 17, 0, 0, 0));
   const endUTC = new Date(Date.UTC(2026, 5, dayNumber, 16, 59, 59, 999));
   return { start: startUTC, end: endUTC };
 }
@@ -28,8 +25,6 @@ export function DataLogTable() {
     const checkDays = async () => {
       setLoadingDays(true);
       const counts = {};
-
-      // Cek tiap hari 6-21 satu per satu pakai count
       const checks = days.filter(d => d >= 6).map(async (day) => {
         const { start, end } = getDateRangeForDay(day);
         const { count } = await supabase
@@ -41,7 +36,6 @@ export function DataLogTable() {
           .gte('suhu', 36);
         if (count > 0) counts[day] = count;
       });
-
       await Promise.all(checks);
       setDayHasData(counts);
       setLoadingDays(false);
@@ -53,9 +47,7 @@ export function DataLogTable() {
     setSelectedDay(day);
     setLoading(true);
     setLogs([]);
-
     const { start, end } = getDateRangeForDay(day);
-
     const { data } = await supabase
       .from('sensor_data')
       .select('*')
@@ -66,7 +58,6 @@ export function DataLogTable() {
       .gte('suhu', 36)
       .order('created_at', { ascending: false })
       .limit(LOGS_PER_DAY);
-
     setLogs(data || []);
     setLoading(false);
   };
@@ -101,7 +92,7 @@ export function DataLogTable() {
             <span className="text-slate-400 text-sm">Memeriksa data...</span>
           </div>
         ) : (
-          <div className="grid grid-cols-7 gap-3">
+          <div className="grid grid-cols-4 gap-4">
             {days.map((day) => {
               const hasData = Boolean(dayHasData[day]);
               return (
@@ -110,7 +101,7 @@ export function DataLogTable() {
                   onClick={() => handleSelectDay(day)}
                   className={`
                     group flex flex-col items-center justify-center
-                    h-24 rounded-2xl border transition-all duration-200
+                    h-20 rounded-2xl border transition-all duration-200
                     ${hasData
                       ? 'bg-cyan-500/10 border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400/60 hover:shadow-lg hover:shadow-cyan-500/10'
                       : 'bg-slate-800/40 border-slate-700/30 hover:bg-slate-700/40'
@@ -132,18 +123,22 @@ export function DataLogTable() {
           </div>
         )}
 
-        <div className="mt-6 pt-5 border-t border-white/5 flex items-center justify-between">
-          <div className="flex items-center gap-5">
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-cyan-500/70"></div>
-              <span className="text-slate-400 text-xs">Ada data</span>
+        {/* Footer legend - centered */}
+        <div className="mt-8 pt-5 border-t border-white/5 flex flex-col items-center gap-3">
+          <p className="text-slate-400 text-sm font-semibold tracking-wide">Keterangan</p>
+          <div className="flex items-center gap-10">
+            <div className="flex items-center gap-2.5">
+              <div className="w-3 h-3 rounded-full bg-cyan-400/80"></div>
+              <span className="text-slate-300 text-sm">Ada data tersedia</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-slate-600/70"></div>
-              <span className="text-slate-400 text-xs">Belum ada data</span>
+            <div className="flex items-center gap-2.5">
+              <div className="w-3 h-3 rounded-full bg-slate-600"></div>
+              <span className="text-slate-300 text-sm">Belum ada data</span>
             </div>
           </div>
-          <p className="text-slate-600 text-xs">Hari ke-{DAY_MIN} – Hari ke-{DAY_MAX}</p>
+          <p className="text-slate-600 text-xs mt-1">
+            Total {DAY_MAX} hari masa inkubasi &nbsp;·&nbsp; Hari ke-{DAY_MIN} sampai Hari ke-{DAY_MAX}
+          </p>
         </div>
       </div>
     );
