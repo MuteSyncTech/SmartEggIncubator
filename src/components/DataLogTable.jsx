@@ -74,24 +74,24 @@ export function DataLogTable() {
         <div className="border-t border-white/5 my-6" />
 
         {/* Grid */}
-        <div className="flex-1 flex items-center"><div className="grid grid-cols-4 gap-4 w-full">
+        <div className="flex-1 pt-8"><div className="grid grid-cols-4 gap-6 h-full">
           {days.map((day) => (
             <button
               key={day}
               onClick={() => handleSelectDay(day)}
               className="
                 group flex flex-col items-center justify-center
-                h-16 rounded-2xl border
+                h-32 rounded-3xl border
                 bg-slate-800/40 border-slate-700/30
                 hover:bg-cyan-500/10 hover:border-cyan-500/40
                 hover:shadow-lg hover:shadow-cyan-500/10
                 transition-all duration-200
               "
             >
-              <span className="text-[11px] text-slate-500 font-medium group-hover:text-cyan-500 transition-colors">
+              <span className="text-base text-slate-400 font-medium mb-3">
                 Hari
               </span>
-              <span className="text-lg font-bold text-slate-300 group-hover:text-cyan-300 mt-0.5 transition-colors">
+              <span className="text-5xl font-bold text-white group-hover:text-cyan-300 transition-colors">
                 {day}
               </span>
             </button>
@@ -102,8 +102,8 @@ export function DataLogTable() {
 
         {/* Footer */}
         <div className="mt-auto pt-5 border-t border-white/5 flex items-center justify-between">
-          <p className="text-slate-600 text-xs">Total {DAY_MAX - DAY_MIN + 1} hari inkubasi</p>
-          <p className="text-slate-600 text-xs">Hari ke-{DAY_MIN} – Hari ke-{DAY_MAX}</p>
+          <p className="text-slate-400 text-base font-medium">Total {DAY_MAX - DAY_MIN + 1} hari inkubasi</p>
+          <p className="text-slate-400 text-base font-medium">Hari ke-{DAY_MIN} – Hari ke-{DAY_MAX}</p>
         </div>
       </div>
     );
