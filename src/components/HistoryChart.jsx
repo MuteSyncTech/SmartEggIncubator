@@ -66,12 +66,13 @@ export function HistoryChart({ data }) {
           />
 
           <Tooltip
-            formatter={(value, name) => [
-              value,
-              name === 'temperature'
-                ? 'Temperature (°C)'
-                : 'Humidity (%)'
-            ]}
+  formatter={(value, name, props) => [
+    value,
+    props.dataKey === "temperature"
+      ? "Temperature (°C)"
+      : "Humidity (%)"
+  ]}
+/>
           />
 
           <Legend />
