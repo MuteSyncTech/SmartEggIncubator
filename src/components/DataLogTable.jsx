@@ -79,8 +79,8 @@ export function DataLogTable() {
             <CalendarDays size={24} />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">Datalog Sensor</h2>
-            <p className="text-slate-500 text-sm mt-0.5">Pilih hari inkubasi yang ingin ditampilkan</p>
+            <h2 className="text-4xl font-bold text-white tracking-tight">Datalog Sensor</h2>
+            <p className="text-slate-500 text-base mt-0.5">Pilih hari inkubasi yang ingin ditampilkan</p>
           </div>
         </div>
 
@@ -92,7 +92,7 @@ export function DataLogTable() {
             <span className="text-slate-400 text-sm">Memeriksa data...</span>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-4 gap-6">
             {days.map((day) => {
               const hasData = Boolean(dayHasData[day]);
               return (
@@ -101,21 +101,21 @@ export function DataLogTable() {
                   onClick={() => handleSelectDay(day)}
                   className={`
                     group flex flex-col items-center justify-center
-                    h-20 rounded-2xl border transition-all duration-200
+                    h-28 rounded-3xl border transition-all duration-200
                     ${hasData
                       ? 'bg-cyan-500/10 border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400/60 hover:shadow-lg hover:shadow-cyan-500/10'
                       : 'bg-slate-800/40 border-slate-700/30 hover:bg-slate-700/40'
                     }
                   `}
                 >
-                  <span className={`text-[11px] font-medium transition-colors ${hasData ? 'text-cyan-600 group-hover:text-cyan-500' : 'text-slate-600'}`}>
+                  <span className={`text-sm font-medium transition-colors ${hasData ? 'text-cyan-600 group-hover:text-cyan-500' : 'text-slate-600'}`}>
                     Hari
                   </span>
-                  <span className={`text-2xl font-bold mt-0.5 transition-colors ${hasData ? 'text-cyan-300' : 'text-slate-500'}`}>
+                  <span className={`text-4xl font-bold mt-0.5 transition-colors ${hasData ? 'text-cyan-300' : 'text-slate-500'}`}>
                     {day}
                   </span>
-                  <span className={`text-[10px] mt-1 font-medium ${hasData ? 'text-cyan-500' : 'text-slate-600'}`}>
-                    {hasData ? 'ada data' : 'kosong'}
+                  <span className={`text-sm mt-1 font-medium ${hasData ? 'text-cyan-500' : 'text-slate-600'}`}>
+                    {hasData ? 'Data tersedia' : 'Belum tersedia'}
                   </span>
                 </button>
               );
@@ -124,22 +124,31 @@ export function DataLogTable() {
         )}
 
         {/* Footer legend - centered */}
-        <div className="mt-8 pt-5 border-t border-white/5 flex flex-col items-center gap-3">
-          <p className="text-slate-400 text-sm font-semibold tracking-wide">Keterangan</p>
-          <div className="flex items-center gap-10">
-            <div className="flex items-center gap-2.5">
-              <div className="w-3 h-3 rounded-full bg-cyan-400/80"></div>
-              <span className="text-slate-300 text-sm">Ada data tersedia</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <div className="w-3 h-3 rounded-full bg-slate-600"></div>
-              <span className="text-slate-300 text-sm">Belum ada data</span>
-            </div>
-          </div>
-          <p className="text-slate-600 text-xs mt-1">
-            Total {DAY_MAX} hari masa inkubasi &nbsp;·&nbsp; Hari ke-{DAY_MIN} sampai Hari ke-{DAY_MAX}
-          </p>
-        </div>
+        <div className="mt-8 pt-5 border-t border-white/5 flex flex-col items-center gap-4">
+  <p className="text-white text-xl font-bold">
+    Keterangan
+  </p>
+
+  <div className="flex items-center gap-12">
+    <div className="flex items-center gap-3">
+      <div className="w-4 h-4 rounded-full bg-cyan-400"></div>
+      <span className="text-slate-200 text-base font-medium">
+        Data tersedia
+      </span>
+    </div>
+
+    <div className="flex items-center gap-3">
+      <div className="w-4 h-4 rounded-full bg-slate-500"></div>
+      <span className="text-slate-200 text-base font-medium">
+        Belum tersedia
+      </span>
+    </div>
+  </div>
+
+  <p className="text-slate-400 text-sm mt-2">
+    Total 21 hari masa inkubasi · Hari ke-1 sampai Hari ke-21
+  </p>
+</div>
       </div>
     );
   }
