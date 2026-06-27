@@ -37,7 +37,7 @@ export function DataLogTable() {
       .select('*')
       .gte('created_at', start.toISOString())
       .lte('created_at', end.toISOString())
-      .order('created_at', { ascending: false })
+      .not('suhu', 'is', null)`n  .not('kelembapan', 'is', null)`n  .gte('suhu', 36)`n  .order('created_at', { ascending: false })
       .limit(LOGS_PER_DAY);
 
     setLogs(data || []);
@@ -270,3 +270,4 @@ export function DataLogTable() {
     </div>
   );
 }
+
