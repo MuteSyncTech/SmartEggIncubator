@@ -2,20 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, Database, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-const START_DATE = new Date('2026-05-31T17:00:00Z'); // Hari ke-1 = 1 Juni 2026 00:00 WIB
 const DAY_MIN = 1;
 const DAY_MAX = 21;
 const LOGS_PER_DAY = 20;
 
+// Hari ke-N = tanggal N Juni 2026 (WIB = UTC+7)
+// Jadi hari ke-6 = 6 Juni 2026 00:00 WIB = 5 Juni 2026 17:00 UTC
 function getDateRangeForDay(dayNumber) {
-  const start = new Date(START_DATE);
-  start.setUTCDate(start.getUTCDate() + (dayNumber - 1));
-
-  const end = new Date(start);
-  end.setUTCDate(end.getUTCDate() + 1);
-  end.setUTCMilliseconds(end.getUTCMilliseconds() - 1);
-
-  return { start, end };
+  // Start = tanggal dayNumber Juni 2026 00:00 WIB = 17:00 UTC hari sebelumnya
+  const startUTC = new Date(Date.UTC(2026, 5, dayNumber - 1, 17, 0, 0, 0)); // bulan 5 = Juni (0-indexed)
+  const endUTC = new Date(Date.UTC(2026, 5, dayNumber, 16, 59, 59, 999));
+  return { start: startUTC, end: endUTC };
 }
 
 export function DataLogTable() {
@@ -27,35 +24,30 @@ export function DataLogTable() {
 
   const days = Array.from({ length: DAY_MAX - DAY_MIN + 1 }, (_, i) => DAY_MIN + i);
 
-  // Cek hari mana yang ada datanya
   useEffect(() => {
-  const checkDays = async () => {
-    setLoadingDays(true);
-
-    const { data } = await supabase
-      .from('sensor_data')
-      .select('created_at')
-      .not('suhu', 'is', null)
-      .gte('suhu', 36);
-
-    if (data) {
+    const checkDays = async () => {
+      setLoadingDays(true);
       const counts = {};
-      data.forEach((row) => {
-        // Konversi ke WIB dulu
-        const wib = new Date(new Date(row.created_at).getTime() + 7 * 60 * 60 * 1000);
-        const startWib = new Date(START_DATE.getTime() + 7 * 60 * 60 * 1000);
-        const diffMs = wib - startWib;
-        const day = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
-        if (day >= 1 && day <= DAY_MAX) {
-          counts[day] = (counts[day] || 0) + 1;
-        }
+
+      // Cek tiap hari 6-21 satu per satu pakai count
+      const checks = days.filter(d => d >= 6).map(async (day) => {
+        const { start, end } = getDateRangeForDay(day);
+        const { count } = await supabase
+          .from('sensor_data')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', start.toISOString())
+          .lte('created_at', end.toISOString())
+          .not('suhu', 'is', null)
+          .gte('suhu', 36);
+        if (count > 0) counts[day] = count;
       });
+
+      await Promise.all(checks);
       setDayHasData(counts);
-    }
-    setLoadingDays(false);
-  };
-  checkDays();
-}, []);
+      setLoadingDays(false);
+    };
+    checkDays();
+  }, []);
 
   const handleSelectDay = async (day) => {
     setSelectedDay(day);
@@ -91,7 +83,6 @@ export function DataLogTable() {
   if (selectedDay === null) {
     return (
       <div className="rounded-3xl border border-cyan-500/10 bg-gradient-to-br from-[#0b1730] to-[#081221] p-8 shadow-2xl shadow-cyan-500/5">
-        {/* Header */}
         <div className="flex items-center gap-4 mb-2">
           <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
             <CalendarDays size={24} />
@@ -104,7 +95,6 @@ export function DataLogTable() {
 
         <div className="border-t border-white/5 my-6" />
 
-        {/* Grid */}
         {loadingDays ? (
           <div className="flex items-center justify-center py-16 gap-3">
             <Loader2 size={22} className="text-cyan-400 animate-spin" />
@@ -123,7 +113,7 @@ export function DataLogTable() {
                     h-24 rounded-2xl border transition-all duration-200
                     ${hasData
                       ? 'bg-cyan-500/10 border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400/60 hover:shadow-lg hover:shadow-cyan-500/10'
-                      : 'bg-slate-800/40 border-slate-700/30 hover:bg-slate-700/40 cursor-pointer'
+                      : 'bg-slate-800/40 border-slate-700/30 hover:bg-slate-700/40'
                     }
                   `}
                 >
@@ -142,7 +132,6 @@ export function DataLogTable() {
           </div>
         )}
 
-        {/* Footer */}
         <div className="mt-6 pt-5 border-t border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-5">
             <div className="flex items-center gap-2">
@@ -163,7 +152,6 @@ export function DataLogTable() {
   // ── LOG TABLE ──────────────────────────────────────────────────────
   return (
     <div className="rounded-3xl border border-cyan-500/10 bg-gradient-to-br from-[#0b1730] to-[#081221] p-8 shadow-2xl shadow-cyan-500/5">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
@@ -179,55 +167,38 @@ export function DataLogTable() {
           </div>
         </div>
 
-        {/* Navigator */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={prevDay}
-            disabled={selectedDay <= DAY_MIN || loading}
+          <button onClick={prevDay} disabled={selectedDay <= DAY_MIN || loading}
             className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/30 text-slate-400
-                       hover:bg-slate-700/60 hover:text-white hover:border-slate-600/50
-                       disabled:opacity-25 disabled:cursor-not-allowed transition-all"
-          >
+                       hover:bg-slate-700/60 hover:text-white disabled:opacity-25 disabled:cursor-not-allowed transition-all">
             <ChevronLeft size={16} />
           </button>
 
           <div className="flex items-center gap-1.5">
             {days.filter((d) => Math.abs(d - selectedDay) <= 2).map((d) => (
-              <button
-                key={d}
-                onClick={() => handleSelectDay(d)}
-                disabled={loading}
-                className={`
-                  w-9 h-9 rounded-xl text-sm font-bold border transition-all
+              <button key={d} onClick={() => handleSelectDay(d)} disabled={loading}
+                className={`w-9 h-9 rounded-xl text-sm font-bold border transition-all
                   ${d === selectedDay
                     ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-300 shadow-lg shadow-cyan-500/10'
                     : 'bg-slate-800/50 border-slate-700/30 text-slate-400 hover:bg-slate-700/50 hover:text-white'
-                  }
-                `}
-              >
+                  }`}>
                 {d}
               </button>
             ))}
           </div>
 
-          <button
-            onClick={nextDay}
-            disabled={selectedDay >= DAY_MAX || loading}
+          <button onClick={nextDay} disabled={selectedDay >= DAY_MAX || loading}
             className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/30 text-slate-400
-                       hover:bg-slate-700/60 hover:text-white hover:border-slate-600/50
-                       disabled:opacity-25 disabled:cursor-not-allowed transition-all"
-          >
+                       hover:bg-slate-700/60 hover:text-white disabled:opacity-25 disabled:cursor-not-allowed transition-all">
             <ChevronRight size={16} />
           </button>
 
           <div className="w-px h-6 bg-white/10 mx-1" />
 
-          <button
-            onClick={() => setSelectedDay(null)}
+          <button onClick={() => setSelectedDay(null)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border
                        bg-slate-800/50 border-slate-700/30 text-slate-400
-                       hover:bg-slate-700/50 hover:text-white hover:border-slate-600/50 transition-all"
-          >
+                       hover:bg-slate-700/50 hover:text-white transition-all">
             <CalendarDays size={14} />
             Pilih Hari
           </button>
