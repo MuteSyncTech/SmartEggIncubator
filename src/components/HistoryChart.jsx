@@ -84,12 +84,12 @@ export function HistoryChart({ data }) {
           <div key={index} style={{ margin: "4px 0" }}>
             <span
               style={{
-                color:
-                  item.dataKey === "temperature"
-                    ? "#38bdf8"
-                    : "#2563eb",
-                fontWeight: 600
-              }}
+  color:
+    item.dataKey === "humidity"
+      ? "#38bdf8"
+      : "#2563eb",
+  fontWeight: 600
+}}
             >
               {item.dataKey === "temperature"
                 ? "Temperature (°C)"
