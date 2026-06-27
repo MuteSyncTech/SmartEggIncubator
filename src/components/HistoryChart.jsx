@@ -69,13 +69,14 @@ export function HistoryChart({ data }) {
   content={({ active, payload }) => {
     if (!active || !payload || !payload.length) return null;
 
-    console.log(payload);
-
     return (
-      <div style={{ background: "#fff", padding: 10 }}>
+      <div style={{ background: "#fff", padding: 10, color: "#000" }}>
         {payload.map((item, i) => (
           <div key={i}>
-            {item.dataKey} : {item.value}
+            {item.dataKey === "temperature"
+              ? "Temperature (°C)"
+              : "Humidity (%)"}{" "}
+            : {item.value}
           </div>
         ))}
       </div>
