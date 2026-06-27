@@ -29,34 +29,33 @@ export function DataLogTable() {
 
   // Cek hari mana yang ada datanya
   useEffect(() => {
-    const checkDays = async () => {
-      setLoadingDays(true);
-      const startRange = getDateRangeForDay(6).start; // mulai hari ke-6
-      const endRange = getDateRangeForDay(DAY_MAX).end;
+  const checkDays = async () => {
+    setLoadingDays(true);
 
-      const { data } = await supabase
-        .from('sensor_data')
-        .select('created_at')
-        .gte('created_at', startRange.toISOString())
-        .lte('created_at', endRange.toISOString())
-        .not('suhu', 'is', null)
-        .gte('suhu', 36);
+    const { data } = await supabase
+      .from('sensor_data')
+      .select('created_at')
+      .not('suhu', 'is', null)
+      .gte('suhu', 36);
 
-      if (data) {
-        const counts = {};
-        data.forEach((row) => {
-          const diffMs = new Date(row.created_at) - START_DATE;
-          const day = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
-          if (day >= 1 && day <= DAY_MAX) {
-            counts[day] = (counts[day] || 0) + 1;
-          }
-        });
-        setDayHasData(counts);
-      }
-      setLoadingDays(false);
-    };
-    checkDays();
-  }, []);
+    if (data) {
+      const counts = {};
+      data.forEach((row) => {
+        // Konversi ke WIB dulu
+        const wib = new Date(new Date(row.created_at).getTime() + 7 * 60 * 60 * 1000);
+        const startWib = new Date(START_DATE.getTime() + 7 * 60 * 60 * 1000);
+        const diffMs = wib - startWib;
+        const day = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+        if (day >= 1 && day <= DAY_MAX) {
+          counts[day] = (counts[day] || 0) + 1;
+        }
+      });
+      setDayHasData(counts);
+    }
+    setLoadingDays(false);
+  };
+  checkDays();
+}, []);
 
   const handleSelectDay = async (day) => {
     setSelectedDay(day);
