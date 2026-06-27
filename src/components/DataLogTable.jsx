@@ -16,7 +16,7 @@ export function DataLogTable({ logs }) {
   // Filter logs for the selected day and take the last 20
   const filteredLogs = selectedDay !== null
     ? (logs || [])
-        .filter((log) => Number(log.day) === selectedDay)
+        .filter((log) => Number(log.hari) === selectedDay)
         .slice(-LOGS_PER_DAY)
     : [];
 
@@ -47,7 +47,7 @@ export function DataLogTable({ logs }) {
         {/* Day grid */}
         <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
           {days.map((day) => {
-            const count = (logs || []).filter((l) => Number(l.day) === day).length;
+            const count = (logs || []).filter((l) => Number(l.hari) === day).length;
             const hasData = count > 0;
             return (
               <button
