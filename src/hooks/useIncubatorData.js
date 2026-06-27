@@ -38,6 +38,8 @@ export function useIncubatorData() {
     .gte('hari', 6)
     .lte('hari', 21)
     .order('created_at', { ascending: true });
+    
+    console.log('ALL LOGS:', allLogs?.length);
 
   const latest = sensorData[0];
   const deviceOffline = (new Date() - new Date(latest.created_at)) > 30000;
